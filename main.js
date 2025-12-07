@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
                         const base44FunctionUrl = `https://power-dialer-pro-bc2ca247.base44.app/api/apps/${base44_app_id}/functions/generateAgentTips`;
 
                         try {
-                            await fetch(base44FunctionUrl, {
+                            const response = await fetch(base44FunctionUrl, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -73,7 +73,14 @@ Deno.serve(async (req) => {
                                     conversationHistory: conversationHistory.slice(-5).map(h => `${h.speaker}: ${h.text}`).join('\n')
                                 })
                             });
-                             console.log('[External WS] Successfully called generateAgentTips function.');
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log('[External WS] Successfully called generateAgentTips function. Response:', JSON.stringify(data));
+                            } else {
+                                const errorText = await response.text();
+                                console.error(`[External WS] Base44 returned error ${response.status}: ${errorText}`);
+                            }
                         } catch (e) {
                             console.error('[External WS] Error calling Base44 generateAgentTips function:', e);
                         }
