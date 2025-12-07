@@ -49,43 +49,56 @@ Deno.serve(async (req) => {
 
                 deepgramWs.onmessage = async (msg) => {
                     const transcriptData = JSON.parse(msg.data);
-                    if (transcriptData.channel?.alternatives?.[0]?.transcript && transcriptData.channel.alternatives[0].transcript.trim().length > 0) {
-                        const text = transcriptData.channel.alternatives[0].transcript;
-                        const speaker = transcriptData.channel.alternatives[0].words?.[0]?.speaker || 0;
-                        console.log(`[Transcript] Speaker ${speaker}: ${text}`);
-                        
-                        conversationHistory.push({ speaker: speaker === 0 ? 'agent' : 'customer', text });
-
-                        // Rufe deine bestehende 'generateAgentTips' Funktion in Base44 auf
-                        const base44FunctionUrl = `https://power-dialer-pro-bc2ca247.base44.app/api/apps/${base44_app_id}/functions/generateAgentTips`;
-
-                        try {
-                            const response = await fetch(base44FunctionUrl, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'api_key': generate_agent_tips_api_key
-                                },
-                                body: JSON.stringify({
-                                    transcript: text,
-                                    callSid: callSid,
-                                    clientId: clientId,
-                                    speaker: speaker,
-                                    conversationHistory: conversationHistory.slice(-5).map(h => `${h.speaker}: ${h.text}`).join("\n")
-                                })
-                            });
+                    
+                    // Nur finale Transkripte verarbeiten
+                    if (transcriptData.is_final && transcriptData.channel?.alternatives?.[0]?.transcript) {
+                        const text = transcriptData.channel.alternatives[0].transcript.trim();
+                        if (text.length > 0) {
+                            const speaker = transcriptData.channel.alternatives[0].words?.[0]?.speaker || 0;
+                            console.log(`[Transcript] Speaker ${speaker}: ${text}`);
                             
-                            if (response.ok) {
-                                const data = await response.json();
-                                console.log('[External WS] Successfully called generateAgentTips function. Response:', JSON.stringify(data));
-                            } else {
-                                const errorText = await response.text();
-                                console.error(`[External WS] Base44 returned error ${response.status}: ${errorText}`);
+                            conversationHistory.push({ speaker: speaker === 0 ? 'agent' : 'customer', text });
+
+                            // Rufe deine bestehende 'generateAgentTips' Funktion in Base44 auf
+                            const base44FunctionUrl = `https://power-dialer-pro-bc2ca247.base44.app/api/apps/${base44_app_id}/functions/generateAgentTips`;
+
+                            try {
+                                const response = await fetch(base44FunctionUrl, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'api_key': generate_agent_tips_api_key
+                                    },
+                                    body: JSON.stringify({
+                                        transcript: text,
+                                        callSid: callSid,
+                                        clientId: clientId,
+                                        speaker: speaker,
+                                        conversationHistory: conversationHistory.slice(-5).map(h => `${h.speaker}: ${h.text}`).join("\n")
+                                    })
+                                });
+                                
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    console.log('[External WS] Successfully called generateAgentTips function. Response:', JSON.stringify(data));
+                                } else {
+                                    const errorText = await response.text();
+                                    console.error(`[External WS] Base44 returned error ${response.status}: ${errorText}`);
+                                }
+                            } catch (e) {
+                                console.error('[External WS] Error calling Base44 generateAgentTips function:', e);
                             }
-                        } catch (e) {
-                            console.error('[External WS] Error calling Base44 generateAgentTips function:', e);
                         }
                     }
+                };
+                
+                deepgramWs.onerror = (error) => {
+                    console.error('[External WS] Deepgram error:', error);
+                };
+                
+                deepgramWs.onclose = (event) => {
+                    console.log(`[External WS] Deepgram closed. Code: ${event.code}, Reason: ${event.reason}`);
+                    isDeepgramOpen = false;
                 };
                 break;
             }
