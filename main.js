@@ -98,12 +98,18 @@ Deno.serve(async (req) => {
             }
 
             case 'media': {
+                // QUICK FIX: Nur inbound-Track verarbeiten (Anrufer)
+                const track = data.media.track;
+                if (track !== 'inbound') {
+                    break; // outbound-Track ignorieren
+                }
+                
                 // Debug: Zähle Audio-Pakete
                 if (!globalThis.audioPacketCount) globalThis.audioPacketCount = 0;
                 globalThis.audioPacketCount++;
                 
                 if (globalThis.audioPacketCount % 100 === 0) {
-                    console.log(`[Audio Debug] Received ${globalThis.audioPacketCount} audio packets, Deepgram open: ${isDeepgramOpen}, WS state: ${deepgramWs?.readyState}`);
+                    console.log(`[Audio Debug] Received ${globalThis.audioPacketCount} inbound audio packets, Deepgram open: ${isDeepgramOpen}, WS state: ${deepgramWs?.readyState}`);
                 }
                 
                 if (isDeepgramOpen && deepgramWs?.readyState === WebSocket.OPEN) {
