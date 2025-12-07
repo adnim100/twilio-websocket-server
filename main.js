@@ -50,6 +50,9 @@ Deno.serve(async (req) => {
                 deepgramWs.onmessage = async (msg) => {
                     const transcriptData = JSON.parse(msg.data);
                     
+                    // Debug: Logge alle Deepgram-Nachrichten
+                    console.log('[Deepgram Debug] Message type:', transcriptData.type, 'is_final:', transcriptData.is_final);
+                    
                     // Nur finale Transkripte verarbeiten
                     if (transcriptData.is_final && transcriptData.channel?.alternatives?.[0]?.transcript) {
                         const text = transcriptData.channel.alternatives[0].transcript.trim();
