@@ -70,7 +70,8 @@ Deno.serve(async (req) => {
                                     transcript: text,
                                     callSid: callSid,
                                     clientId: clientId,
-                                    conversationHistory: conversationHistory.slice(-5).map(h => `${h.speaker}: ${h.text}`).join('\n')
+                                    speaker: speaker,
+                                    conversationHistory: conversationHistory.slice(-5).map(h => `${h.speaker}: ${h.text}`).join("\n")
                                 })
                             });
                             
