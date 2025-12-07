@@ -60,37 +60,36 @@ Deno.serve(async (req) => {
                             const speaker = transcriptData.channel.alternatives[0].words?.[0]?.speaker || 0;
                             console.log(`[Transcript] Speaker ${speaker}: ${text}`);
                             
-                            conversationHistory.push({ speaker: speaker === 0 ? 'agent' : 'customer', text });
+                        conversationHistory.push({ speaker: speaker === 0 ? 'agent' : 'customer', text });
 
-                            // Rufe deine bestehende 'generateAgentTips' Funktion in Base44 auf
-                            const base44FunctionUrl = `https://power-dialer-pro-bc2ca247.base44.app/api/apps/${base44_app_id}/functions/generateAgentTips`;
+                        // Rufe deine bestehende 'generateAgentTips' Funktion in Base44 auf (nicht-blockierend)
+                        const base44FunctionUrl = `https://power-dialer-pro-bc2ca247.base44.app/api/apps/${base44_app_id}/functions/generateAgentTips`;
 
-                            try {
-                                const response = await fetch(base44FunctionUrl, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'api_key': generate_agent_tips_api_key
-                                    },
-                                    body: JSON.stringify({
-                                        transcript: text,
-                                        callSid: callSid,
-                                        clientId: clientId,
-                                        speaker: speaker,
-                                        conversationHistory: conversationHistory.slice(-5).map(h => `${h.speaker}: ${h.text}`).join("\n")
-                                    })
-                                });
-                                
-                                if (response.ok) {
-                                    const data = await response.json();
-                                    console.log('[External WS] Successfully called generateAgentTips function. Response:', JSON.stringify(data));
-                                } else {
-                                    const errorText = await response.text();
-                                    console.error(`[External WS] Base44 returned error ${response.status}: ${errorText}`);
-                                }
-                            } catch (e) {
-                                console.error('[External WS] Error calling Base44 generateAgentTips function:', e);
+                        // Fire-and-forget: Blockiert nicht die Verarbeitung weiterer Transkripte
+                        fetch(base44FunctionUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'api_key': generate_agent_tips_api_key
+                            },
+                            body: JSON.stringify({
+                                transcript: text,
+                                callSid: callSid,
+                                clientId: clientId,
+                                speaker: speaker,
+                                conversationHistory: conversationHistory.slice(-5).map(h => `${h.speaker}: ${h.text}`).join("\n")
+                            })
+                        }).then(async (response) => {
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log('[External WS] Successfully called generateAgentTips function.');
+                            } else {
+                                const errorText = await response.text();
+                                console.error(`[External WS] Base44 returned error ${response.status}: ${errorText}`);
                             }
+                        }).catch((e) => {
+                            console.error('[External WS] Error calling Base44 generateAgentTips function:', e);
+                        });
                         }
                     }
                 };
