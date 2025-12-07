@@ -26,7 +26,14 @@ Deno.serve(async (req) => {
             case 'start': {
                 console.log("[External WS] Stream started:", data.start);
                 const { callSid, customParameters } = data.start;
-                const { clientId, generate_agent_tips_api_key, base44_app_id } = customParameters;
+                const { 
+                    clientId, 
+                    generate_agent_tips_api_key, 
+                    base44_app_id,
+                    leadId,
+                    pipelineId,
+                    stage
+                } = customParameters;
 
                 if (!generate_agent_tips_api_key || !base44_app_id) {
                     console.error("[External WS] Base44 App ID or generateAgentTips API key missing in parameters.");
@@ -71,11 +78,13 @@ Deno.serve(async (req) => {
                                     'api_key': generate_agent_tips_api_key
                                 },
                                 body: JSON.stringify({
-                                    transcript: text,
-                                    callSid: callSid,
-                                    clientId: clientId,
+                                    text: text,
                                     speaker: 'agent',
-                                    conversationHistory: conversationHistory.slice(-10).map(h => `${h.speaker}: ${h.text}`).join("\n")
+                                    call_record_id: callSid,
+                                    client_id: clientId,
+                                    lead_id: leadId,
+                                    pipeline_id: pipelineId,
+                                    stage: stage
                                 })
                             }).catch((e) => {
                                 console.error('[External WS] Error sending inbound transcript to Base44:', e);
@@ -125,11 +134,13 @@ Deno.serve(async (req) => {
                                     'api_key': generate_agent_tips_api_key
                                 },
                                 body: JSON.stringify({
-                                    transcript: text,
-                                    callSid: callSid,
-                                    clientId: clientId,
+                                    text: text,
                                     speaker: 'customer',
-                                    conversationHistory: conversationHistory.slice(-10).map(h => `${h.speaker}: ${h.text}`).join("\n")
+                                    call_record_id: callSid,
+                                    client_id: clientId,
+                                    lead_id: leadId,
+                                    pipeline_id: pipelineId,
+                                    stage: stage
                                 })
                             }).catch((e) => {
                                 console.error('[External WS] Error sending outbound transcript to Base44:', e);
