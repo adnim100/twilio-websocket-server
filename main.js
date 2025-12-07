@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
                 }
 
                 deepgramWs = new WebSocket(
-                    `wss://api.deepgram.com/v1/listen?model=nova-3&language=de&diarize=true&punctuate=true&encoding=mulaw&sample_rate=8000&channels=2&multichannel=true`,
+                    `wss://api.deepgram.com/v1/listen?model=nova-3&language=de&diarize=true&punctuate=true&encoding=mulaw&sample_rate=8000&channels=1`,
                     ['token', deepgramApiKey]
                 );
 
