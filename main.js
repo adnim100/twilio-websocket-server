@@ -62,10 +62,9 @@ Deno.serve(async (req) => {
                             
                         conversationHistory.push({ speaker: speaker === 0 ? 'agent' : 'customer', text });
 
-                        // Rufe deine bestehende 'generateAgentTips' Funktion in Base44 auf (nicht-blockierend)
+                        // Fire-and-forget: Sende Transkript an Base44 ohne auf Response zu warten
                         const base44FunctionUrl = `https://power-dialer-pro-bc2ca247.base44.app/api/apps/${base44_app_id}/functions/generateAgentTips`;
 
-                        // Fire-and-forget: Blockiert nicht die Verarbeitung weiterer Transkripte
                         fetch(base44FunctionUrl, {
                             method: 'POST',
                             headers: {
@@ -79,16 +78,8 @@ Deno.serve(async (req) => {
                                 speaker: speaker,
                                 conversationHistory: conversationHistory.slice(-5).map(h => `${h.speaker}: ${h.text}`).join("\n")
                             })
-                        }).then(async (response) => {
-                            if (response.ok) {
-                                const data = await response.json();
-                                console.log('[External WS] Successfully called generateAgentTips function.');
-                            } else {
-                                const errorText = await response.text();
-                                console.error(`[External WS] Base44 returned error ${response.status}: ${errorText}`);
-                            }
                         }).catch((e) => {
-                            console.error('[External WS] Error calling Base44 generateAgentTips function:', e);
+                            console.error('[External WS] Error sending transcript to Base44:', e);
                         });
                         }
                     }
