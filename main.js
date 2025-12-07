@@ -98,6 +98,14 @@ Deno.serve(async (req) => {
             }
 
             case 'media': {
+                // Debug: Zähle Audio-Pakete
+                if (!globalThis.audioPacketCount) globalThis.audioPacketCount = 0;
+                globalThis.audioPacketCount++;
+                
+                if (globalThis.audioPacketCount % 100 === 0) {
+                    console.log(`[Audio Debug] Received ${globalThis.audioPacketCount} audio packets, Deepgram open: ${isDeepgramOpen}, WS state: ${deepgramWs?.readyState}`);
+                }
+                
                 if (isDeepgramOpen && deepgramWs?.readyState === WebSocket.OPEN) {
                     const audioPayload = atob(data.media.payload);
                     const len = audioPayload.length;
@@ -106,6 +114,8 @@ Deno.serve(async (req) => {
                         bytes[i] = audioPayload.charCodeAt(i);
                     }
                     deepgramWs.send(bytes);
+                } else {
+                    console.log(`[Audio Debug] Cannot send audio - Deepgram open: ${isDeepgramOpen}, WS state: ${deepgramWs?.readyState}`);
                 }
                 break;
             }
