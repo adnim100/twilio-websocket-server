@@ -57,9 +57,9 @@ Deno.serve(async (req) => {
                     if (transcriptData.is_final && transcriptData.channel?.alternatives?.[0]?.transcript) {
                         const text = transcriptData.channel.alternatives[0].transcript.trim();
                         if (text.length > 0) {
-                            console.log(`[Transcript INBOUND] Customer: ${text}`);
+                            console.log(`[Transcript INBOUND] Agent: ${text}`);
                             
-                            conversationHistory.push({ speaker: 'customer', text });
+                            conversationHistory.push({ speaker: 'agent', text });
 
                             // Fire-and-forget: Sende Transkript an Base44
                             const base44FunctionUrl = `https://power-dialer-pro-bc2ca247.base44.app/api/apps/${base44_app_id}/functions/generateAgentTips`;
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
                                     transcript: text,
                                     callSid: callSid,
                                     clientId: clientId,
-                                    speaker: 'customer',
+                                    speaker: 'agent',
                                     conversationHistory: conversationHistory.slice(-10).map(h => `${h.speaker}: ${h.text}`).join("\n")
                                 })
                             }).catch((e) => {
@@ -111,9 +111,9 @@ Deno.serve(async (req) => {
                     if (transcriptData.is_final && transcriptData.channel?.alternatives?.[0]?.transcript) {
                         const text = transcriptData.channel.alternatives[0].transcript.trim();
                         if (text.length > 0) {
-                            console.log(`[Transcript OUTBOUND] Agent: ${text}`);
+                            console.log(`[Transcript OUTBOUND] Customer: ${text}`);
                             
-                            conversationHistory.push({ speaker: 'agent', text });
+                            conversationHistory.push({ speaker: 'customer', text });
 
                             // Fire-and-forget: Sende Transkript an Base44
                             const base44FunctionUrl = `https://power-dialer-pro-bc2ca247.base44.app/api/apps/${base44_app_id}/functions/generateAgentTips`;
@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
                                     transcript: text,
                                     callSid: callSid,
                                     clientId: clientId,
-                                    speaker: 'agent',
+                                    speaker: 'customer',
                                     conversationHistory: conversationHistory.slice(-10).map(h => `${h.speaker}: ${h.text}`).join("\n")
                                 })
                             }).catch((e) => {
